@@ -2,7 +2,6 @@ package com.example.notepad;
 
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Canvas;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -22,10 +21,11 @@ import org.litepal.tablemanager.Connector;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NoteList extends AppCompatActivity {
+public class NoteList extends AppCompatActivity implements OnStartDragListener{
     private List<Note> datalist;//数据列表
     private RecyclerView recyclerView;
     private MyAdapter myAdapter;
+    private ItemTouchHelper mItemTouchHelper;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,46 +42,51 @@ public class NoteList extends AppCompatActivity {
 
         LinearLayoutManager layoutManager=new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
-        myAdapter=new MyAdapter(datalist);
+        myAdapter=new MyAdapter(datalist,this);
 
         recyclerView.setAdapter(myAdapter);
 
-        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,ItemTouchHelper.LEFT){
+//        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,ItemTouchHelper.LEFT){
+//
+//            @Override
+//            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+//
+//                return false;
+//            }
+//
+//            @Override
+//            public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+//                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+//                if(actionState==ItemTouchHelper.ACTION_STATE_SWIPE){
+//
+//                        viewHolder.itemView.scrollTo(-(int) dX, 0);
+//
+//                }
+//            }
+//
+//            @Override
+//            public void clearView(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+//                super.clearView(recyclerView, viewHolder);
+//                viewHolder.itemView.setScrollX(0);
+//            }
+//
+//            @Override
+//            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+//                int position=viewHolder.getPosition();
+//                Note note=datalist.get(position);
+//                DataSupport.delete(Note.class,note.getId());
+////                refresh();
+////                myAdapter.setList(datalist);
+////                recyclerView.setAdapter(myAdapter);
+//            }
+//
+//
+//        }).attachToRecyclerView(recyclerView);
+        ItemTouchHelper.Callback callback = new SimpleItemTouchHelperCallback(myAdapter);
+        mItemTouchHelper = new ItemTouchHelper(callback);
+        mItemTouchHelper.attachToRecyclerView(recyclerView);
 
-            @Override
-            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
 
-                return false;
-            }
-
-            @Override
-            public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
-                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
-                if(actionState==ItemTouchHelper.ACTION_STATE_SWIPE){
-
-                        viewHolder.itemView.scrollTo(-(int) dX, 0);
-
-                }
-            }
-
-            @Override
-            public void clearView(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
-                super.clearView(recyclerView, viewHolder);
-                viewHolder.itemView.setScrollX(0);
-            }
-
-            @Override
-            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-                int position=viewHolder.getPosition();
-                Note note=datalist.get(position);
-                DataSupport.delete(Note.class,note.getId());
-                refresh();
-                myAdapter.setList(datalist);
-                recyclerView.setAdapter(myAdapter);
-            }
-
-
-        }).attachToRecyclerView(recyclerView);
         myAdapter.setmListener(new MyItemClickListener() {//这里只需创造接口类对象，并且实现其中的方法，这是一种简写
             //不省略的写法是需要创造一个类实现MyItemClickListener接口，然后父类对象指向子类实例(父类为接口)，然后这里放入父类对象
             @Override
@@ -162,5 +167,10 @@ public class NoteList extends AppCompatActivity {
         refresh();
         myAdapter.setList(datalist);
         recyclerView.setAdapter(myAdapter);
+    }
+
+    @Override
+    public void onStartDrag(RecyclerView.ViewHolder viewHolder) {
+
     }
 }

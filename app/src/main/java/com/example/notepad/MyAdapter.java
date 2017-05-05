@@ -1,25 +1,32 @@
 package com.example.notepad;
 
+import android.support.v4.view.MotionEventCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import org.litepal.crud.DataSupport;
+
+import java.util.Collections;
 import java.util.List;
 
 /**
  * Created by 司维 on 2017/4/22.
  */
 
-public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder>  {//这个adapter是为了将数据和view做适配
+public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder>  implements ItemToucheHelperAdapter{//这个adapter是为了将数据和view做适配
     private List<Note> list;
     private static MyItemClickListener mListener;
     private static MyItemLongClickListener mLongClickListener;
+    private OnStartDragListener mDragStartListener;
 
-    public MyAdapter(List<Note> list){
+    public MyAdapter(List<Note> list,OnStartDragListener onStartDragListener){
         //构造函数，传入数据
         this.list=list;
+        mDragStartListener=onStartDragListener;
     }
 
     public void setList(List<Note> list){
@@ -35,7 +42,22 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder>  {//�
     }
 
 
-    static class ViewHolder extends RecyclerView.ViewHolder {//内部类ViewHolder
+    @Override
+    public void onItemMove(int fromPosition, int toPosition) {
+        Collections.swap(list, fromPosition, toPosition);
+        notifyItemMoved(fromPosition, toPosition);
+    }
+
+    @Override
+    public void onItemDissmiss(int position) {
+        list.remove(position);
+        notifyItemRemoved(position);
+        Note note=list.get(position);
+        DataSupport.delete(Note.class,note.getId());
+    }
+
+
+    static class ViewHolder extends RecyclerView.ViewHolder implements ItemTouchHelperViewHolder{//内部类ViewHolder
         public static TextView text1;
         public static TextView text2;
         public static TextView time;
@@ -66,6 +88,15 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder>  {//�
             });
         }
 
+        @Override
+        public void onItemSelected() {
+            //itemView.setBackgroundColor(Color.LTGRAY);
+        }
+
+        @Override
+        public void onItemClear() {
+            itemView.setBackgroundColor(0);
+        }
     }
     @Override
     public MyAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {//通过布局创建view，紧接着创建ViewHolder
@@ -75,11 +106,20 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder>  {//�
     }
 
     @Override
-    public void onBindViewHolder(MyAdapter.ViewHolder holder, int position) {//将数据和viewHolder中的子项view进行绑定
+    public void onBindViewHolder(final MyAdapter.ViewHolder holder, int position) {//将数据和viewHolder中的子项view进行绑定
         Note note=list.get(position);
         holder.text1.setText(note.getTitle());
         holder.text2.setText(note.getContent());
         holder.time.setText(note.getDate());
+        holder.itemView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_DOWN) {
+                    mDragStartListener.onStartDrag(holder);
+                }
+                return false;
+            }
+        });
     }
 
     @Override
