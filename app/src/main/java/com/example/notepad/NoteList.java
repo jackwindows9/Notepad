@@ -46,42 +46,7 @@ public class NoteList extends AppCompatActivity implements OnStartDragListener{
 
         recyclerView.setAdapter(myAdapter);
 
-//        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,ItemTouchHelper.LEFT){
 //
-//            @Override
-//            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-//
-//                return false;
-//            }
-//
-//            @Override
-//            public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
-//                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
-//                if(actionState==ItemTouchHelper.ACTION_STATE_SWIPE){
-//
-//                        viewHolder.itemView.scrollTo(-(int) dX, 0);
-//
-//                }
-//            }
-//
-//            @Override
-//            public void clearView(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
-//                super.clearView(recyclerView, viewHolder);
-//                viewHolder.itemView.setScrollX(0);
-//            }
-//
-//            @Override
-//            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-//                int position=viewHolder.getPosition();
-//                Note note=datalist.get(position);
-//                DataSupport.delete(Note.class,note.getId());
-////                refresh();
-////                myAdapter.setList(datalist);
-////                recyclerView.setAdapter(myAdapter);
-//            }
-//
-//
-//        }).attachToRecyclerView(recyclerView);
         ItemTouchHelper.Callback callback = new SimpleItemTouchHelperCallback(myAdapter);
         mItemTouchHelper = new ItemTouchHelper(callback);
         mItemTouchHelper.attachToRecyclerView(recyclerView);

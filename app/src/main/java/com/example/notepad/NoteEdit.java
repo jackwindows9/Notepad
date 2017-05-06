@@ -17,8 +17,9 @@ import java.util.Date;
 public class NoteEdit extends AppCompatActivity {
     private EditText text1;
     private EditText text2;
-    private String editMode;
-    private String saveMode="";
+    private String editMode;//从上一个activity获得的参数，区分update和create
+    private String saveMode="";//区分直接结束活动保存和点击保存按钮保存
+    private Boolean updateIsEmpty=false;
     private static String noSave="";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +77,10 @@ public class NoteEdit extends AppCompatActivity {
         contentValues.put("title",text1.getText().toString());
         contentValues.put("content",text2.getText().toString());
         DataSupport.update(Note.class,contentValues,id);
+        if(text1.getText().toString().equals("")&&text2.getText().toString().equals("")){
+            DataSupport.delete(Note.class,id);//如果更新之后，标题和内容都为空，那么删除
+            updateIsEmpty=true;
+        }
     }
 
     @Override
@@ -99,7 +104,11 @@ public class NoteEdit extends AppCompatActivity {
                         //更新数据，与新建不同在于显示数据,并且id是不变的
                         int id = intent.getIntExtra("id", 0);
                         updateNote(id);
-                        Toast.makeText(NoteEdit.this, "便签已默认保存", Toast.LENGTH_SHORT).show();
+                        if(updateIsEmpty)
+                            ;//编辑后为空，这条记录已经被删除，那么活动的声生命周期走到onPause的时候则不会给出Toast，因为并未保存
+                        else {
+                            Toast.makeText(NoteEdit.this, "便签已默认保存", Toast.LENGTH_SHORT).show();
+                        }
                         break;
                     default:
                         break;

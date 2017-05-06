@@ -70,7 +70,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder>  imple
             text1= (TextView) itemView.findViewById(R.id.tv1);
             text2= (TextView) itemView.findViewById(R.id.tv2);
             time= (TextView) itemView.findViewById(R.id.time);
-            //tv=(TextView)itemView.findViewById(R.id.tv);
+            tv=(TextView)itemView.findViewById(R.id.tv);
             itemView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
@@ -108,8 +108,21 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder>  imple
     @Override
     public void onBindViewHolder(final MyAdapter.ViewHolder holder, int position) {//将数据和viewHolder中的子项view进行绑定
         Note note=list.get(position);
-        holder.text1.setText(note.getTitle());
-        holder.text2.setText(note.getContent());
+        if(note.getTitle().equals("")){//无标题则取内容的前几个字符
+            if(note.getContent().length()<=10)
+                holder.text1.setText(note.getContent());
+            else
+                holder.text1.setText(note.getContent().substring(0,10));
+        }
+        else {
+            holder.text1.setText(note.getTitle());
+        }
+        if(note.getContent().length()>21){//内容过长，省略部分
+            holder.text2.setText(note.getContent().substring(0,21)+"...");
+        }
+        else {
+            holder.text2.setText(note.getContent());
+        }
         holder.time.setText(note.getDate());
         holder.itemView.setOnTouchListener(new View.OnTouchListener() {
             @Override
