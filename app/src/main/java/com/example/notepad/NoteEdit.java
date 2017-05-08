@@ -3,9 +3,10 @@ package com.example.notepad;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
-import android.view.View;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -17,6 +18,7 @@ import java.util.Date;
 public class NoteEdit extends AppCompatActivity {
     private EditText text1;
     private EditText text2;
+    private MenuItem item_settings;
     private String editMode;//从上一个activity获得的参数，区分update和create
     private String saveMode="";//区分直接结束活动保存和点击保存按钮保存
     private Boolean updateIsEmpty=false;
@@ -25,6 +27,9 @@ public class NoteEdit extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.edit);
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_edit);
+        setSupportActionBar(toolbar);
         text1= (EditText) findViewById(R.id.edittext1);
         text2= (EditText) findViewById(R.id.edittext2);
         Intent intent=getIntent();
@@ -35,28 +40,6 @@ public class NoteEdit extends AppCompatActivity {
             text1.setText(note.getTitle());
             text2.setText(note.getContent());
         }
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab_done);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent=getIntent();
-                editMode=intent.getStringExtra("mode");
-                switch(editMode){
-                    case "new":
-                        newNote();
-                        break;
-                    case "update":
-                        //更新数据，与新建不同在于显示数据,并且id是不变的
-                        int id=intent.getIntExtra("id",0);
-                        updateNote(id);
-                        break;
-                    default:
-                        break;
-                }
-                saveMode="save";
-                finish();
-            }
-        });
     }
     private void newNote(){
         Note note=new Note();
@@ -114,5 +97,45 @@ public class NoteEdit extends AppCompatActivity {
                         break;
                 }
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_note_edit, menu);
+        item_settings=menu.findItem(R.id.settings);
+        item_settings.setVisible(false);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+
+        if (id == R.id.save) {
+            Intent intent=getIntent();
+            editMode=intent.getStringExtra("mode");
+            switch(editMode){
+                case "new":
+                    newNote();
+                    break;
+                case "update":
+                    //更新数据，与新建不同在于显示数据,并且id是不变的
+                    int ids=intent.getIntExtra("id",0);
+                    updateNote(ids);
+                    break;
+                default:
+                    break;
+            }
+            saveMode="save";
+            item.setVisible(false);
+            item_settings.setVisible(true);
+
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+
     }
 }

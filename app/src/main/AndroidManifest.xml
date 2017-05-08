@@ -21,7 +21,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".NoteEdit" android:launchMode="standard"></activity>
+        <activity android:name=".NoteEdit" android:theme="@style/AppTheme.NoActionBar" android:launchMode="standard"></activity>
     </application>
 
 </manifest>
