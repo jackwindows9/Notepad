@@ -44,6 +44,8 @@ public class NoteList extends AppCompatActivity implements OnStartDragListener{
         recyclerView.setLayoutManager(layoutManager);
         myAdapter=new MyAdapter(datalist,this);
 
+
+
         recyclerView.setAdapter(myAdapter);
 
 //
@@ -72,13 +74,33 @@ public class NoteList extends AppCompatActivity implements OnStartDragListener{
 
         recyclerView.setItemAnimator(new DefaultItemAnimator());
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent=new Intent(NoteList.this,NoteEdit.class);
                 intent.putExtra("mode","new");
                 startActivityForResult(intent,1);
+            }
+        });
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                if(recyclerView.SCROLL_STATE_IDLE==newState){
+                    //暂停移动
+                }
+            }
+
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                if(dy>0){
+                    fab.hide();
+                }
+                else{
+                    fab.show();
+                }
             }
         });
 

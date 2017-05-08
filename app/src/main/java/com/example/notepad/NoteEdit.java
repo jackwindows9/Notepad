@@ -97,7 +97,7 @@ public class NoteEdit extends AppCompatActivity {
                     case "new":
                         newNote();
                         if(!noSave.equals("no")) {
-                            Toast.makeText(NoteEdit.this, "便签已默认保存", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(NoteEdit.this, "Saved By default", Toast.LENGTH_SHORT).show();
                         }
                         break;
                     case "update":
@@ -107,7 +107,7 @@ public class NoteEdit extends AppCompatActivity {
                         if(updateIsEmpty)
                             ;//编辑后为空，这条记录已经被删除，那么活动的声生命周期走到onPause的时候则不会给出Toast，因为并未保存
                         else {
-                            Toast.makeText(NoteEdit.this, "便签已默认保存", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(NoteEdit.this, "Saved By default", Toast.LENGTH_SHORT).show();
                         }
                         break;
                     default:

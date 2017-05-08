@@ -61,7 +61,6 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder>  imple
         public static TextView text1;
         public static TextView text2;
         public static TextView time;
-        public static TextView tv;
         public static View view;
 
         public ViewHolder(final View itemView) {
@@ -70,7 +69,6 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder>  imple
             text1= (TextView) itemView.findViewById(R.id.tv1);
             text2= (TextView) itemView.findViewById(R.id.tv2);
             time= (TextView) itemView.findViewById(R.id.time);
-            tv=(TextView)itemView.findViewById(R.id.tv);
             itemView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {

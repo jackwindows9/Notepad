@@ -65,10 +65,6 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
     public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
         if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
             // Fade out the view as it is swiped out of the parent's bounds
-            if (Math.abs(dX) <= getSlideLimitation(viewHolder)){
-                viewHolder.itemView.scrollTo(-(int) dX,0);
-            }
-
             final float alpha = ALPHA_FULL - Math.abs(dX) / (float) viewHolder.itemView.getWidth();
             viewHolder.itemView.setAlpha(alpha);
             viewHolder.itemView.setTranslationX(dX);
@@ -102,8 +98,6 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
             ItemTouchHelperViewHolder itemViewHolder = (ItemTouchHelperViewHolder) viewHolder;
             itemViewHolder.onItemClear();
         }
-        viewHolder.itemView.setScrollX(0);
-        ((MyAdapter.ViewHolder)viewHolder).tv.setText("左滑删除");
 
     }
     public int getSlideLimitation(RecyclerView.ViewHolder viewHolder){
