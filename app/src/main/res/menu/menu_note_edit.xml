@@ -5,7 +5,7 @@
     tools:context="com.example.notepad.NoteEdit">
     <item
         android:title="About"
-        android:id="@+id/settings"
+        android:id="@+id/about"
         app:showAsAction="never"/>
     <item
         android:id="@+id/save"
