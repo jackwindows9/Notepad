@@ -8,8 +8,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import org.litepal.crud.DataSupport;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -50,11 +48,14 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder>  imple
 
     @Override
     public void onItemDissmiss(int position) {
-        list.remove(position);
-        notifyItemRemoved(position);
-        Note note=list.get(position);
-        DataSupport.delete(Note.class,note.getId());
+//        list.remove(position);
+//        notifyItemRemoved(position);
+//        Note note=list.get(position);
+//        DataSupport.delete(Note.class,note.getId());
+        //在这个函数中，本来是将某个item删除，但是不建议采用这样的方法，转而使用一个长按弹出checkbox来选定删除
     }
+    //这里是item删除和移动的响应函数，这里不采用这种方法，
+    // 相关联的文件有ItemToucheHelperAdapter,OnStartDragListener,SimpleItemToucheHelperCallback
 
 
     static class ViewHolder extends RecyclerView.ViewHolder implements ItemTouchHelperViewHolder{//内部类ViewHolder

@@ -19,6 +19,7 @@ import org.litepal.crud.DataSupport;
 import org.litepal.tablemanager.Connector;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class NoteList extends AppCompatActivity implements OnStartDragListener{
@@ -129,6 +130,7 @@ public class NoteList extends AppCompatActivity implements OnStartDragListener{
     }
     private void refresh(){
         datalist= DataSupport.findAll(Note.class);
+        Collections.sort(datalist);
     }
 
     @Override

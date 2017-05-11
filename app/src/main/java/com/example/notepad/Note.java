@@ -1,12 +1,14 @@
 package com.example.notepad;
 
+import android.support.annotation.NonNull;
+
 import org.litepal.crud.DataSupport;
 
 /**
  * Created by 司维 on 2017/4/20.
  */
 
-public class Note extends DataSupport {
+public class Note extends DataSupport implements Comparable<Note>{
     private int id;
     private String title;
     private String content;
@@ -41,5 +43,12 @@ public class Note extends DataSupport {
     }
     public void setDate(String date){
         this.date=date;
+    }
+
+
+    @Override
+    public int compareTo(@NonNull Note o) {
+        int c=o.getDate().compareTo(this.getDate());
+        return c;
     }
 }

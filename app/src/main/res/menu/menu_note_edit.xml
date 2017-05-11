@@ -4,12 +4,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.example.notepad.NoteEdit">
     <item
-        android:title="About"
+        android:id="@+id/menuitem_delete"
+        android:icon="@drawable/ic_delete_white_24dp"
+        android:title=""
+        app:showAsAction="always" />
+    <item
         android:id="@+id/about"
-        app:showAsAction="never"/>
+        android:title="About"
+        app:showAsAction="never" />
     <item
         android:id="@+id/save"
-        android:icon="@drawable/ic_done_white_36dp"
+        android:icon="@drawable/ic_done_white_24dp"
         android:orderInCategory="100"
         android:title=""
         app:showAsAction="always" />
