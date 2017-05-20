@@ -54,6 +54,7 @@ public class NoteEdit extends AppCompatActivity {
         String content = text2.getText().toString();
         if (title.equals("") && content.equals("")) {
             noSave = "no";
+            finish();
             return;
         }
         note.setTitle(text1.getText().toString());
@@ -73,6 +74,7 @@ public class NoteEdit extends AppCompatActivity {
         if (text1.getText().toString().equals("") && text2.getText().toString().equals("")) {
             DataSupport.delete(Note.class, id);//如果更新之后，标题和内容都为空，那么删除
             updateIsEmpty = true;
+            finish();
         }
     }
 
