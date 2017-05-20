@@ -13,9 +13,18 @@ public class Note extends DataSupport implements Comparable<Note>{
     private String title;
     private String content;
     private String date;
+    private boolean isChecked=false;
 
     public int getId() {
         return id;
+    }
+
+    public boolean isChecked() {
+        return this.isChecked;
+    }
+
+    public void setIsChecked(boolean isChecked) {
+        this.isChecked = isChecked;
     }
 
     public void setId(int id) {

@@ -7,7 +7,7 @@ import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.ViewGroup;
 
 /**
- * Created by 司维 on 2017/5/5.
+ * Created by 司维 on 2017/5/18.
  */
 
 public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
@@ -57,7 +57,6 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
     @Override
     public void onSwiped(RecyclerView.ViewHolder viewHolder, int i) {
         // Notify the adapter of the dismissal
-
         mAdapter.onItemDissmiss(viewHolder.getAdapterPosition());
     }
 
@@ -104,6 +103,5 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
         ViewGroup viewGroup = (ViewGroup) viewHolder.itemView;
         return viewGroup.getChildAt(1).getLayoutParams().width;
     }
-
 }
 

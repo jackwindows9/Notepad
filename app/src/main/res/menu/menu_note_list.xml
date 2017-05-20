@@ -1,10 +1,21 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.example.notepad.NoteList">
+    tools:context="com.example.notepad.NoteList"
+    android:title="Notepad"
+    >
     <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:title="@string/action_settings"
-        app:showAsAction="never" />
+        android:id="@+id/menuitem_delete_main"
+        android:icon="@drawable/ic_close_white_24dp"
+        android:title=""
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/about"
+        android:title="About" />
+    <item
+        android:id="@+id/menuitem_delete_checkbox"
+        android:title=""
+        android:icon="@drawable/ic_delete_white_24dp"
+        app:showAsAction="always"
+        />
 </menu>

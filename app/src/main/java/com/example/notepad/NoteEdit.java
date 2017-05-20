@@ -1,19 +1,14 @@
 package com.example.notepad;
 
 import android.content.ContentValues;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.Html;
-import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import org.litepal.crud.DataSupport;
@@ -122,7 +117,7 @@ public class NoteEdit extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_note_edit, menu);
-        item_settings = menu.findItem(R.id.about);
+        item_settings = menu.findItem(R.id.action_settings);
         item_settings.setVisible(false);
         return true;
     }
@@ -153,21 +148,6 @@ public class NoteEdit extends AppCompatActivity {
             item_settings.setVisible(true);
 
             return true;
-        }
-        if (id == R.id.about) {
-            TextView content = (TextView) getLayoutInflater().inflate(R.layout.about_view, null);
-            content.setMovementMethod(LinkMovementMethod.getInstance());
-            content.setText(Html.fromHtml(getString(R.string.about)));
-            new AlertDialog.Builder(this)
-                    .setTitle("about")
-                    .setView(content)
-                    .setInverseBackgroundForced(true)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    }).create().show();
         }
         if (id == R.id.menuitem_delete) {
             Intent intent = getIntent();
