@@ -3,7 +3,6 @@ package com.example.notepad;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
@@ -36,61 +35,66 @@ public class NoteList extends AppCompatActivity {
     private ItemTouchHelper mItemTouchHelper;
     private MenuItem delete_checkbox;
     private MenuItem delete_undo;
-    public static boolean checkboxIsVisible=false;
+    public static boolean isDeleteMode = false;
     private Toolbar toolbar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_note_list);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        recyclerView= (RecyclerView) findViewById(R.id.recycler_view);
-
-        SQLiteDatabase db=Connector.getDatabase();//创建数据库和表
-        datalist=new ArrayList<Note>();
-
+        recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        Connector.getDatabase();//create database and table
+        datalist = new ArrayList<Note>();
+        refresh();
         //Add data here in the List from database
-        refresh();//将当前的数据库中的所有项重新导入显示列表
-
-        LinearLayoutManager layoutManager=new LinearLayoutManager(this);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
-        myAdapter=new MyAdapter(datalist);
+        myAdapter = new MyAdapter(datalist);
         recyclerView.setAdapter(myAdapter);
-
-        ItemTouchHelper.Callback callback = new SimpleItemTouchHelperCallback(myAdapter);
-        mItemTouchHelper = new ItemTouchHelper(callback);
-        mItemTouchHelper.attachToRecyclerView(recyclerView);
-
-
         myAdapter.setmListener(new MyItemClickListener() {//这里只需创造接口类对象，并且实现其中的方法，这是一种简写
             //不省略的写法是需要创造一个类实现MyItemClickListener接口，然后父类对象指向子类实例(父类为接口)，然后这里放入父类对象
             @Override
             public void onItemClick(View view, int position) {
-                Intent intent=new Intent(NoteList.this,NoteEdit.class);
-                intent.putExtra("mode","update");
-                Note note=datalist.get(position);
-                intent.putExtra("id",note.getId());
-                startActivityForResult(intent,2);
+                refresh();
+                Note note = datalist.get(position);
+                if (!NoteList.isDeleteMode) {//当前页面未处于删除模式，才可以删除
+                    Intent intent = new Intent(NoteList.this, NoteEdit.class);
+                    note = datalist.get(position);
+                    intent.putExtra("mode", "update");//send editmode to edit interface
+                    intent.putExtra("id", note.getId());//send note.id to edit interface
+                    startActivityForResult(intent, 2);
+                } else {
+                    MyAdapter.ViewHolder viewHolder = new MyAdapter.ViewHolder(view);
+                    viewHolder.checkBox.setChecked(!note.isChecked());
+                    ContentValues contentValues = new ContentValues();
+                    contentValues.put("isChecked", !note.isChecked());
+                    int id = note.getId();
+                    DataSupport.update(Note.class, contentValues, id);
+                    refresh();
+                }
             }
         });
         myAdapter.setmLongClickListener(new MyItemLongClickListener() {
             @Override
-            public void onItemLongClick(View view,int position) {
-                delete_checkbox.setVisible(true);
-                delete_undo.setVisible(true);
-                toolbar.setTitle("");
-                //更新当前的checkbox的选中
-                MyAdapter.ViewHolder viewHolder=new MyAdapter.ViewHolder(view);
+            public void onItemLongClick(View view, int position) {
+                Log.d("data",position+"");
+                refresh();
+                //update the item on toolbar
+                changeDeleteMode(true);
+                //update checkbox selected on this item
+                MyAdapter.ViewHolder viewHolder = new MyAdapter.ViewHolder(view);
                 viewHolder.checkBox.setChecked(true);
-                //更新当前选中的条目的isChecked选项
-                ContentValues contentValues=new ContentValues();
-                contentValues.put("isChecked",true);
-                int id=datalist.get(position).getId();
-                DataSupport.update(Note.class,contentValues,id);
-
-                datalist=DataSupport.findAll(Note.class);
+                //update the data in this item
+                ContentValues contentValues = new ContentValues();
+                contentValues.put("isChecked", true);
+                int id = datalist.get(position).getId();
+                DataSupport.update(Note.class, contentValues, id);
+                //update datalist
+                refresh();
                 myAdapter.notifyDataSetChanged();
-                checkboxIsVisible=true;
+                isDeleteMode = true;
             }
         });
 
@@ -100,9 +104,9 @@ public class NoteList extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(!checkboxIsVisible) {
+                if (!isDeleteMode) {
                     Intent intent = new Intent(NoteList.this, NoteEdit.class);
-                    intent.putExtra("mode", "new");
+                    intent.putExtra("mode", "new");//send editMode to edit interface
                     startActivityForResult(intent, 1);
                 }
             }
@@ -111,7 +115,7 @@ public class NoteList extends AppCompatActivity {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
-                if(recyclerView.SCROLL_STATE_IDLE==newState){
+                if (recyclerView.SCROLL_STATE_IDLE == newState) {
                     //暂停移动
                 }
             }
@@ -119,37 +123,30 @@ public class NoteList extends AppCompatActivity {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-                if(dy>0){
+                if (dy > 0) {
                     fab.hide();
-                }
-                else{
+                } else {
                     fab.show();
                 }
             }
         });
-
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_note_list, menu);
-        delete_undo=menu.findItem(R.id.menuitem_delete_main);
+        delete_undo = menu.findItem(R.id.disappear_delete_mode);
+        delete_checkbox = menu.findItem(R.id.delete_note);
         delete_undo.setVisible(false);
-
-        delete_checkbox= menu.findItem(R.id.menuitem_delete_checkbox);
         delete_checkbox.setVisible(false);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.about) {
             TextView content = (TextView) getLayoutInflater().inflate(R.layout.about_view, null);
             content.setMovementMethod(LinkMovementMethod.getInstance());
@@ -166,59 +163,50 @@ public class NoteList extends AppCompatActivity {
                     }).create().show();
             return true;
         }
-        if(id==R.id.menuitem_delete_checkbox){
-            datalist=DataSupport.findAll(Note.class);
-            for(int i=0;i<datalist.size();i++){
-                Log.d("data",i+"");
-                if(datalist.get(i).isChecked()){
-                    Log.d("data",datalist.get(i).getId()+"");
-                    DataSupport.delete(Note.class,datalist.get(i).getId());
+        if (id == R.id.delete_note) {
+            datalist = DataSupport.findAll(Note.class);
+            for (int i = 0; i < datalist.size(); i++) {
+                if (datalist.get(i).isChecked()) {
+                    DataSupport.delete(Note.class, datalist.get(i).getId());
                 }
             }
             refresh();
             myAdapter.setList(datalist);
             recyclerView.setAdapter(myAdapter);
-            delete_undo.setVisible(false);
-            delete_checkbox.setVisible(false);
-            toolbar.setTitle("Notepad");
-            checkboxIsVisible=false;
-            MyAdapter.isDeleteMode=false;
+            changeDeleteMode(false);
+            isDeleteMode = false;
             myAdapter.notifyDataSetChanged();
             return true;
         }
-        if(id==R.id.menuitem_delete_main){
-            delete_undo.setVisible(false);
-            delete_checkbox.setVisible(false);
-            ContentValues contentValues=new ContentValues();
-            contentValues.put("isChecked",false);
-            datalist=DataSupport.findAll(Note.class);
-            for(int i=0;i<datalist.size();i++) {
-                int ids = datalist.get(i).getId();
-                DataSupport.update(Note.class, contentValues, ids);
+        if (id == R.id.disappear_delete_mode) {
+            changeDeleteMode(false);
+            ContentValues contentValues = new ContentValues();
+            contentValues.put("isChecked", false);
+            for (int i = 0; i < datalist.size(); i++) {
+                DataSupport.update(Note.class, contentValues, datalist.get(i).getId());
+                //change the property isChecked in every note;
+                View view=recyclerView.getChildAt(i);
+                MyAdapter.ViewHolder viewHolder=new MyAdapter.ViewHolder(view);
+                viewHolder.checkBox.setChecked(false);
             }
-            checkboxIsVisible=false;
-            toolbar.setTitle("Notepad");
-            MyAdapter.isDeleteMode=false;
+            isDeleteMode = false;
+            refresh();
             myAdapter.notifyDataSetChanged();
-            datalist=DataSupport.findAll(Note.class);
-
             return true;
-
         }
-
         return super.onOptionsItemSelected(item);
     }
-    private void refresh(){
-        datalist= DataSupport.findAll(Note.class);
+
+    private void refresh() {
+        datalist = DataSupport.findAll(Note.class);
         Collections.sort(datalist);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        switch(requestCode){
+        switch (requestCode) {
             case 1:
-                Log.d("NoteList","done");
                 refresh();
                 break;
             case 2:
@@ -227,7 +215,6 @@ public class NoteList extends AppCompatActivity {
             default:
                 break;
         }
-
     }
 
     @Override
@@ -238,8 +225,13 @@ public class NoteList extends AppCompatActivity {
         recyclerView.setAdapter(myAdapter);
     }
 
-//    @Override
-//    public void onStartDrag(RecyclerView.ViewHolder viewHolder) {
-//
-//    }
+    private void changeDeleteMode(boolean isDelete) {
+        delete_undo.setVisible(isDelete);
+        delete_checkbox.setVisible(isDelete);
+        if (isDelete) {
+            toolbar.setTitle("");
+        } else {
+            toolbar.setTitle("Notepad");
+        }
+    }
 }
