@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
@@ -18,21 +17,20 @@ import java.util.Date;
 
 import static com.example.notepad.R.id.save;
 
+
 public class NoteEdit extends AppCompatActivity {
     private EditText text1;
     private EditText text2;
-    private MenuItem item_settings;
     private String editMode;//从上一个activity获得的参数，区分update和create
     private String saveMode = "";//区分直接结束活动保存和点击保存按钮保存
-    private int newId;//存放新建并已保存的note的id
-    private Boolean updateIsEmpty = false;
-    private static String noSave = "";
+    private int updateId = -1;
+    private Note note;
+    private boolean isSaveDeafult = true;//save by default
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.edit);
-
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_edit);
         setSupportActionBar(toolbar);
         text1 = (EditText) findViewById(R.id.edittext1);
@@ -40,28 +38,27 @@ public class NoteEdit extends AppCompatActivity {
         Intent intent = getIntent();
         editMode = intent.getStringExtra("mode");
         if (editMode.equals("update")) {
-            int id = intent.getIntExtra("id", 0);
-            Note note = DataSupport.find(Note.class, id);
+            updateId = intent.getIntExtra("id", 0);
+            note = DataSupport.find(Note.class, updateId);
             text1.setText(note.getTitle());
             text2.setText(note.getContent());
         }
     }
 
     private void newNote() {
-        Note note = new Note();
-        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
+        note = new Note();
         String title = text1.getText().toString();
         String content = text2.getText().toString();
         if (title.equals("") && content.equals("")) {
-            noSave = "no";
-            finish();
+            isSaveDeafult = false;
+            finish();//when save nothing, finish it and don't give users a chance to input without saving button.
             return;
         }
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
         note.setTitle(text1.getText().toString());
         note.setContent(text2.getText().toString());
         note.setDate(df.format(new Date()));
         note.save();
-        newId=note.getId();
     }
 
     private void updateNote(int id) {
@@ -69,11 +66,11 @@ public class NoteEdit extends AppCompatActivity {
         contentValues.put("title", text1.getText().toString());
         contentValues.put("content", text2.getText().toString());
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        contentValues.put("date",df.format(new Date()));
+        contentValues.put("date", df.format(new Date()));
         DataSupport.update(Note.class, contentValues, id);
         if (text1.getText().toString().equals("") && text2.getText().toString().equals("")) {
-            DataSupport.delete(Note.class, id);//如果更新之后，标题和内容都为空，那么删除
-            updateIsEmpty = true;
+            DataSupport.delete(Note.class, id);//by the end, nothing in title and content.so delete it;
+            isSaveDeafult=false;
             finish();
         }
     }
@@ -81,31 +78,26 @@ public class NoteEdit extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        switch (saveMode){
-            case "save":
-                //主动保存
-                break;
+        switch (saveMode) {
             case "delete":
-                //删除
-                Log.d("delete","successful");
+                //delete the note;
+                break;
+            case "save":
+                //use saving button to save;
                 break;
             default:
-                Intent intent = getIntent();
-                editMode = intent.getStringExtra("mode");
                 switch (editMode) {
                     case "new":
                         newNote();
-                        if (!noSave.equals("no")) {
+                        if (isSaveDeafult) {
                             Toast.makeText(NoteEdit.this, "Saved By default", Toast.LENGTH_SHORT).show();
                         }
                         break;
                     case "update":
-                        //更新数据，与新建不同在于显示数据,并且id是不变的
-                        int id = intent.getIntExtra("id", 0);
-                        updateNote(id);
-                        if (updateIsEmpty)
-                            ;//编辑后为空，这条记录已经被删除，那么活动的声生命周期走到onPause的时候则不会给出Toast，因为并未保存
-                        else {
+                        updateNote(updateId);
+                        //It is not existing a condition that nothing is saved,but Toast.show("Saved By default"),
+                        //Because when nothing is be saved ,it will be finished.
+                        if(isSaveDeafult) {
                             Toast.makeText(NoteEdit.this, "Saved By default", Toast.LENGTH_SHORT).show();
                         }
                         break;
@@ -119,51 +111,40 @@ public class NoteEdit extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_note_edit, menu);
-        item_settings = menu.findItem(R.id.action_settings);
-        item_settings.setVisible(false);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-
         //noinspection SimplifiableIfStatement
-
         if (id == save) {
-            Intent intent = getIntent();
-            editMode = intent.getStringExtra("mode");
             switch (editMode) {
                 case "new":
                     newNote();
                     break;
                 case "update":
-                    //更新数据，与新建不同在于显示数据,并且id是不变的
-                    int ids = intent.getIntExtra("id", 0);
-                    updateNote(ids);
+                    updateNote(updateId);
                     break;
                 default:
                     break;
             }
             saveMode = "save";
-            item.setVisible(false);
-            item_settings.setVisible(true);
-
+            finish();
             return true;
         }
         if (id == R.id.menuitem_delete) {
-            Intent intent = getIntent();
-            int ids = intent.getIntExtra("id", -1);
-            if(ids==-1){
-                //默认-1，表示新建的note，并未从NoteList这个活动中获取id
-                ids=newId;
-                Log.d("delete",""+ids);
+            if (updateId != -1) {
+                //updateId
+                DataSupport.delete(Note.class, updateId);
+                //delete this updateId
             }
-            DataSupport.delete(Note.class, ids);
-            saveMode = "delete";
+            //if newId,we know newId==-1 now
+            //nothing be created
+            //nothing we need to do
+            saveMode = "delete";//do nothing in onPause
             finish();
         }
         return super.onOptionsItemSelected(item);
-
     }
 }
