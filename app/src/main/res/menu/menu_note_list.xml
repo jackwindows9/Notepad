@@ -10,6 +10,10 @@
         android:title=""
         app:showAsAction="always" />
     <item
+        android:id="@+id/select_all"
+        android:title="All"
+        app:showAsAction="always"/>
+    <item
         android:id="@+id/delete_note"
         android:title=""
         android:icon="@drawable/ic_delete_white_24dp"

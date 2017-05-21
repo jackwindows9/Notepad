@@ -2,7 +2,6 @@ package com.example.notepad;
 
 import android.content.ContentValues;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +21,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {//这
     private List<Note> list;
     private static MyItemClickListener mListener;
     private static MyItemLongClickListener mLongClickListener;
+    private MyCheckboxChangedListener myCheckboxChangedListener;
 
     public MyAdapter(List<Note> list){
         this.list=list;
@@ -34,6 +34,9 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {//这
     }
     public void setmLongClickListener(MyItemLongClickListener mLongClickListener) {
         this.mLongClickListener = mLongClickListener;
+    }
+    public void setMyCheckboxChangedListener(MyCheckboxChangedListener myCheckboxChangedListener){
+        this.myCheckboxChangedListener=myCheckboxChangedListener;
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {//内部类ViewHolder
@@ -83,7 +86,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {//这
                 contentValues.put("isChecked",isChecked);
                 int id=note.getId();
                 DataSupport.update(Note.class,contentValues,id);
-                Log.d("data","changed");
+                myCheckboxChangedListener.onChanged();
             }
         });
         if(note.getTitle().equals("")){//无标题则取内容的前几个字符

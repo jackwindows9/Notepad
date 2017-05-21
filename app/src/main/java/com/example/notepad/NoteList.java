@@ -35,6 +35,7 @@ public class NoteList extends AppCompatActivity {
     private ItemTouchHelper mItemTouchHelper;
     private MenuItem delete_checkbox;
     private MenuItem delete_undo;
+    private MenuItem select_all;
     public static boolean isDeleteMode = false;
     private Toolbar toolbar;
 
@@ -79,7 +80,6 @@ public class NoteList extends AppCompatActivity {
         myAdapter.setmLongClickListener(new MyItemLongClickListener() {
             @Override
             public void onItemLongClick(View view, int position) {
-                Log.d("data",position+"");
                 refresh();
                 //update the item on toolbar
                 changeDeleteMode(true);
@@ -95,6 +95,26 @@ public class NoteList extends AppCompatActivity {
                 refresh();
                 myAdapter.notifyDataSetChanged();
                 isDeleteMode = true;
+            }
+        });
+        myAdapter.setMyCheckboxChangedListener(new MyCheckboxChangedListener() {
+            @Override
+            public void onChanged() {//check wheather all checkbox is selected
+                refresh();
+                int checkedNum = 0;//the number of checkbox which is selected
+                for (int i = 0; i < datalist.size(); i++) {
+                    if (datalist.get(i).isChecked()) {
+                        checkedNum++;
+                    }
+                }
+                Log.d("data", checkedNum + "");
+                if (checkedNum == datalist.size() && "All".equals(select_all.getTitle())) {
+                    //all checkbox is selected
+                    select_all.setTitle("No All");
+                }
+                if (checkedNum < datalist.size() && "No All".equals(select_all.getTitle())) {
+                    select_all.setTitle("All");
+                }
             }
         });
 
@@ -138,8 +158,10 @@ public class NoteList extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.menu_note_list, menu);
         delete_undo = menu.findItem(R.id.disappear_delete_mode);
         delete_checkbox = menu.findItem(R.id.delete_note);
+        select_all = menu.findItem(R.id.select_all);
         delete_undo.setVisible(false);
         delete_checkbox.setVisible(false);
+        select_all.setVisible(false);
         return true;
     }
 
@@ -185,14 +207,39 @@ public class NoteList extends AppCompatActivity {
             for (int i = 0; i < datalist.size(); i++) {
                 DataSupport.update(Note.class, contentValues, datalist.get(i).getId());
                 //change the property isChecked in every note;
-                View view=recyclerView.getChildAt(i);
-                MyAdapter.ViewHolder viewHolder=new MyAdapter.ViewHolder(view);
+                View view = recyclerView.getChildAt(i);
+                MyAdapter.ViewHolder viewHolder = new MyAdapter.ViewHolder(view);
                 viewHolder.checkBox.setChecked(false);
             }
             isDeleteMode = false;
             refresh();
             myAdapter.notifyDataSetChanged();
             return true;
+        }
+        if (id == R.id.select_all) {
+            ContentValues contentValues = new ContentValues();
+            if("No All".equals(select_all.getTitle())){
+                contentValues.put("isChecked", false);
+                for (int i = 0; i < datalist.size(); i++) {
+                    DataSupport.update(Note.class, contentValues, datalist.get(i).getId());
+                    //change the property isChecked in every note;
+                    View view = recyclerView.getChildAt(i);
+                    MyAdapter.ViewHolder viewHolder = new MyAdapter.ViewHolder(view);
+                    viewHolder.checkBox.setChecked(false);
+                }
+            }
+            else{
+                contentValues.put("isChecked", true);
+                for (int i = 0; i < datalist.size(); i++) {
+                    DataSupport.update(Note.class, contentValues, datalist.get(i).getId());
+                    //change the property isChecked in every note;
+                    View view = recyclerView.getChildAt(i);
+                    MyAdapter.ViewHolder viewHolder = new MyAdapter.ViewHolder(view);
+                    viewHolder.checkBox.setChecked(true);
+                }
+            }
+            refresh();
+            myAdapter.notifyDataSetChanged();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -228,10 +275,29 @@ public class NoteList extends AppCompatActivity {
     private void changeDeleteMode(boolean isDelete) {
         delete_undo.setVisible(isDelete);
         delete_checkbox.setVisible(isDelete);
+        select_all.setVisible(isDelete);
         if (isDelete) {
             toolbar.setTitle("");
         } else {
             toolbar.setTitle("Notepad");
         }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        changeDeleteMode(false);
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("isChecked", false);
+        for (int i = 0; i < datalist.size(); i++) {
+            DataSupport.update(Note.class, contentValues, datalist.get(i).getId());
+            //change the property isChecked in every note;
+            View view = recyclerView.getChildAt(i);
+            MyAdapter.ViewHolder viewHolder = new MyAdapter.ViewHolder(view);
+            viewHolder.checkBox.setChecked(false);
+        }
+        isDeleteMode = false;
+        refresh();
+        myAdapter.notifyDataSetChanged();
     }
 }
