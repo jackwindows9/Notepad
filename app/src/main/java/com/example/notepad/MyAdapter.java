@@ -2,6 +2,7 @@ package com.example.notepad;
 
 import android.content.ContentValues;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +19,7 @@ import java.util.List;
  */
 
 public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {//这个adapter是为了将数据和view做适配
+    private final static String TAG="MyAdapter";
     private List<Note> list;
     private static MyItemClickListener mListener;
     private static MyItemLongClickListener mLongClickListener;
@@ -44,7 +46,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {//这
         public TextView text2;
         public TextView time;
         public CheckBox checkBox;
-        public ViewHolder(final View itemView) {
+        public ViewHolder(View itemView) {
             super(itemView);
             text1= (TextView) itemView.findViewById(R.id.tv1);
             text2= (TextView) itemView.findViewById(R.id.tv2);
@@ -55,38 +57,45 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {//这
     @Override
     public MyAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {//通过布局创建view，紧接着创建ViewHolder
         View view= LayoutInflater.from(parent.getContext()).inflate(R.layout.note_item,parent,false);
-        final ViewHolder viewHolder=new ViewHolder(view);
-        view.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                int position=viewHolder.getAdapterPosition();
-                mLongClickListener.onItemLongClick(v, position);
-                NoteList.isDeleteMode=true;
-                return true;
-            }
-        });
-        viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                    int position = viewHolder.getAdapterPosition();
-                    mListener.onItemClick(viewHolder.itemView, position);
-            }
-        });
+        ViewHolder viewHolder=new ViewHolder(view);
         return viewHolder;
     }
 
     @Override
-    public void onBindViewHolder( MyAdapter.ViewHolder holder, int position) {//将数据和viewHolder中的子项view进行绑定
+    public void onBindViewHolder(final MyAdapter.ViewHolder holder, int position) {//将数据和viewHolder中的子项view进行绑定
         final Note note=list.get(position);
-        holder.checkBox.setVisibility(NoteList.isDeleteMode?View.VISIBLE:View.GONE);
+        holder.checkBox.setVisibility(NoteList.isDeleteMode?View.VISIBLE:View.INVISIBLE);
         holder.checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                Log.d(TAG,"onCheckedChanged");
                 ContentValues contentValues=new ContentValues();
                 contentValues.put("isChecked",isChecked);
+                Log.d(TAG,holder.text1.toString());
+                Log.d(TAG,holder.checkBox.toString());
                 int id=note.getId();
+                Log.d(TAG,note.getTitle());
                 DataSupport.update(Note.class,contentValues,id);
                 myCheckboxChangedListener.onChanged();
+            }
+        });
+        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                int position=holder.getAdapterPosition();
+                mLongClickListener.onItemLongClick(v, position);
+                holder.checkBox.setChecked(true);
+                Log.d(TAG,holder.text1.toString());
+                Log.d(TAG,holder.checkBox.toString());
+                NoteList.isDeleteMode=true;
+                return true;
+            }
+        });
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int position = holder.getAdapterPosition();
+                mListener.onItemClick(v, position);
             }
         });
         if(note.getTitle().equals("")){//无标题则取内容的前几个字符

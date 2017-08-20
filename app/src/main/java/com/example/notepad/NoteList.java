@@ -14,7 +14,6 @@ import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -83,9 +82,6 @@ public class NoteList extends AppCompatActivity {
                 refresh();
                 //update the item on toolbar
                 changeDeleteMode(true);
-                //update checkbox selected on this item
-                MyAdapter.ViewHolder viewHolder = new MyAdapter.ViewHolder(view);
-                viewHolder.checkBox.setChecked(true);
                 //update the data in this item
                 ContentValues contentValues = new ContentValues();
                 contentValues.put("isChecked", true);
@@ -107,7 +103,6 @@ public class NoteList extends AppCompatActivity {
                         checkedNum++;
                     }
                 }
-                Log.d("data", checkedNum + "");
                 if (checkedNum == datalist.size() && "All".equals(select_all.getTitle())) {
                     //all checkbox is selected
                     select_all.setTitle("No All");
@@ -287,10 +282,6 @@ public class NoteList extends AppCompatActivity {
         contentValues.put("isChecked", false);
         for (int i = 0; i < datalist.size(); i++) {
             DataSupport.update(Note.class, contentValues, datalist.get(i).getId());
-            //change the property isChecked in every note;
-            View view = recyclerView.getChildAt(i);
-            MyAdapter.ViewHolder viewHolder = new MyAdapter.ViewHolder(view);
-            viewHolder.checkBox.setChecked(false);
         }
         isDeleteMode = false;
         refresh();
