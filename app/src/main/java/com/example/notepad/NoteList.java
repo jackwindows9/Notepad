@@ -206,10 +206,6 @@ public class NoteList extends AppCompatActivity {
             contentValues.put("isChecked", false);
             for (int i = 0; i < datalist.size(); i++) {
                 DataSupport.update(Note.class, contentValues, datalist.get(i).getId());
-                //change the property isChecked in every note;
-                View view = recyclerView.getChildAt(i);
-                MyAdapter.ViewHolder viewHolder = new MyAdapter.ViewHolder(view);
-                viewHolder.checkBox.setChecked(false);
             }
             isDeleteMode = false;
             refresh();
