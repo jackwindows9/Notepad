@@ -14,6 +14,7 @@ import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -28,6 +29,7 @@ import java.util.List;
 
 
 public class NoteList extends AppCompatActivity {
+    private final static String TAG="NoteList";
     private List<Note> datalist;//数据列表
     private RecyclerView recyclerView;
     private MyAdapter myAdapter;
@@ -57,9 +59,9 @@ public class NoteList extends AppCompatActivity {
             //不省略的写法是需要创造一个类实现MyItemClickListener接口，然后父类对象指向子类实例(父类为接口)，然后这里放入父类对象
             @Override
             public void onItemClick(View view, int position) {
-                refresh();
                 Note note = datalist.get(position);
                 if (!NoteList.isDeleteMode) {//当前页面未处于删除模式，才可以删除
+                    refresh();
                     Intent intent = new Intent(NoteList.this, NoteEdit.class);
                     note = datalist.get(position);
                     intent.putExtra("mode", "update");//send editmode to edit interface
@@ -68,27 +70,19 @@ public class NoteList extends AppCompatActivity {
                 } else {
                     MyAdapter.ViewHolder viewHolder = new MyAdapter.ViewHolder(view);
                     viewHolder.checkBox.setChecked(!note.isChecked());
-                    ContentValues contentValues = new ContentValues();
-                    contentValues.put("isChecked", !note.isChecked());
-                    int id = note.getId();
-                    DataSupport.update(Note.class, contentValues, id);
-                    refresh();
+                    note.setIsChecked(!note.isChecked());
                 }
+                myAdapter.setList(datalist);
             }
         });
         myAdapter.setmLongClickListener(new MyItemLongClickListener() {
             @Override
             public void onItemLongClick(View view, int position) {
-                refresh();
                 //update the item on toolbar
                 changeDeleteMode(true);
-                //update the data in this item
-                ContentValues contentValues = new ContentValues();
-                contentValues.put("isChecked", true);
-                int id = datalist.get(position).getId();
-                DataSupport.update(Note.class, contentValues, id);
-                //update datalist
-                refresh();
+                Note note=datalist.get(position);
+                note.setIsChecked(true);
+                myAdapter.setList(datalist);
                 myAdapter.notifyDataSetChanged();
                 isDeleteMode = true;
             }
@@ -96,19 +90,20 @@ public class NoteList extends AppCompatActivity {
         myAdapter.setMyCheckboxChangedListener(new MyCheckboxChangedListener() {
             @Override
             public void onChanged() {//check wheather all checkbox is selected
-                refresh();
                 int checkedNum = 0;//the number of checkbox which is selected
                 for (int i = 0; i < datalist.size(); i++) {
                     if (datalist.get(i).isChecked()) {
                         checkedNum++;
                     }
                 }
-                if (checkedNum == datalist.size() && "All".equals(select_all.getTitle())) {
-                    //all checkbox is selected
-                    select_all.setTitle("No All");
-                }
-                if (checkedNum < datalist.size() && "No All".equals(select_all.getTitle())) {
-                    select_all.setTitle("All");
+                if (select_all != null) {
+                    if (checkedNum == datalist.size() && "All".equals(select_all.getTitle())) {
+                        //all checkbox is selected
+                        select_all.setTitle("No All");
+                    }
+                    if (checkedNum < datalist.size() && "No All".equals(select_all.getTitle())) {
+                        select_all.setTitle("All");
+                    }
                 }
             }
         });
@@ -132,6 +127,7 @@ public class NoteList extends AppCompatActivity {
                 super.onScrollStateChanged(recyclerView, newState);
                 if (recyclerView.SCROLL_STATE_IDLE == newState) {
                     //暂停移动
+                    fab.show();
                 }
             }
 
@@ -181,7 +177,6 @@ public class NoteList extends AppCompatActivity {
             return true;
         }
         if (id == R.id.delete_note) {
-            datalist = DataSupport.findAll(Note.class);
             for (int i = 0; i < datalist.size(); i++) {
                 if (datalist.get(i).isChecked()) {
                     DataSupport.delete(Note.class, datalist.get(i).getId());
@@ -201,35 +196,40 @@ public class NoteList extends AppCompatActivity {
             contentValues.put("isChecked", false);
             for (int i = 0; i < datalist.size(); i++) {
                 DataSupport.update(Note.class, contentValues, datalist.get(i).getId());
+                datalist.get(i).setIsChecked(false);
             }
+            Log.d(TAG,"disappear_delete_moed");
             isDeleteMode = false;
-            refresh();
+            myAdapter.setList(datalist);
             myAdapter.notifyDataSetChanged();
+            refresh();
             return true;
         }
         if (id == R.id.select_all) {
-            ContentValues contentValues = new ContentValues();
-            if("No All".equals(select_all.getTitle())){
-                contentValues.put("isChecked", false);
+
+            if ("No All".equals(select_all.getTitle())) {
+
                 for (int i = 0; i < datalist.size(); i++) {
-                    DataSupport.update(Note.class, contentValues, datalist.get(i).getId());
-                    //change the property isChecked in every note;
+                    datalist.get(i).setIsChecked(false);
+                    Log.d(TAG,"select_all");
                     View view = recyclerView.getChildAt(i);
-                    MyAdapter.ViewHolder viewHolder = new MyAdapter.ViewHolder(view);
-                    viewHolder.checkBox.setChecked(false);
+                    if(view!=null) {
+                        MyAdapter.ViewHolder viewHolder = new MyAdapter.ViewHolder(view);
+                        viewHolder.checkBox.setChecked(false);
+                    }
+                }
+            } else {
+                for (int i = 0; i < datalist.size(); i++) {
+                    Log.d(TAG,"select_all");
+                    datalist.get(i).setIsChecked(true);
+                    View view = recyclerView.getChildAt(i);
+                    if(view!=null) {
+                        MyAdapter.ViewHolder viewHolder = new MyAdapter.ViewHolder(view);
+                        viewHolder.checkBox.setChecked(true);
+                    }
                 }
             }
-            else{
-                contentValues.put("isChecked", true);
-                for (int i = 0; i < datalist.size(); i++) {
-                    DataSupport.update(Note.class, contentValues, datalist.get(i).getId());
-                    //change the property isChecked in every note;
-                    View view = recyclerView.getChildAt(i);
-                    MyAdapter.ViewHolder viewHolder = new MyAdapter.ViewHolder(view);
-                    viewHolder.checkBox.setChecked(true);
-                }
-            }
-            refresh();
+            myAdapter.setList(datalist);
             myAdapter.notifyDataSetChanged();
         }
         return super.onOptionsItemSelected(item);
@@ -281,8 +281,10 @@ public class NoteList extends AppCompatActivity {
         ContentValues contentValues = new ContentValues();
         contentValues.put("isChecked", false);
         for (int i = 0; i < datalist.size(); i++) {
+            datalist.get(i).setIsChecked(false);
             DataSupport.update(Note.class, contentValues, datalist.get(i).getId());
         }
+        Log.d(TAG,"onPause");
         isDeleteMode = false;
         refresh();
         myAdapter.notifyDataSetChanged();
