@@ -1,6 +1,5 @@
 package com.example.notepad;
 
-import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -11,7 +10,6 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
@@ -33,7 +31,6 @@ public class NoteList extends AppCompatActivity {
     private List<Note> datalist;//数据列表
     private RecyclerView recyclerView;
     private MyAdapter myAdapter;
-    private ItemTouchHelper mItemTouchHelper;
     private MenuItem delete_checkbox;
     private MenuItem delete_undo;
     private MenuItem select_all;
@@ -134,7 +131,8 @@ public class NoteList extends AppCompatActivity {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-                if (dy > 0) {
+                Log.d(TAG,dy+"");
+                if (dy > 1||dy<-1) {
                     fab.hide();
                 } else {
                     fab.show();
@@ -192,17 +190,13 @@ public class NoteList extends AppCompatActivity {
         }
         if (id == R.id.disappear_delete_mode) {
             changeDeleteMode(false);
-            ContentValues contentValues = new ContentValues();
-            contentValues.put("isChecked", false);
             for (int i = 0; i < datalist.size(); i++) {
-                DataSupport.update(Note.class, contentValues, datalist.get(i).getId());
                 datalist.get(i).setIsChecked(false);
             }
-            Log.d(TAG,"disappear_delete_moed");
+            Log.d(TAG,"disappear_delete_mode");
             isDeleteMode = false;
             myAdapter.setList(datalist);
             myAdapter.notifyDataSetChanged();
-            refresh();
             return true;
         }
         if (id == R.id.select_all) {
@@ -277,12 +271,13 @@ public class NoteList extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        changeDeleteMode(false);
-        ContentValues contentValues = new ContentValues();
-        contentValues.put("isChecked", false);
+        if(delete_undo!=null){
+            //如果在界面中未操作菜单，那么delete_undo就不会被初始化
+            //所以在这里需要进行判断
+            changeDeleteMode(false);
+        }
         for (int i = 0; i < datalist.size(); i++) {
             datalist.get(i).setIsChecked(false);
-            DataSupport.update(Note.class, contentValues, datalist.get(i).getId());
         }
         Log.d(TAG,"onPause");
         isDeleteMode = false;

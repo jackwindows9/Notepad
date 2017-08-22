@@ -42,6 +42,11 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {//这
         this.myCheckboxChangedListener = myCheckboxChangedListener;
     }
 
+    @Override
+    public int getItemCount() {//获得数据项的大小
+        return list.size();
+    }
+
     static class ViewHolder extends RecyclerView.ViewHolder {//内部类ViewHolder
         public TextView text1;
         public TextView text2;
@@ -105,13 +110,6 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {//这
             holder.text2.setText(note.getContent());
         }
         holder.time.setText(note.getDate());
-
         holder.checkBox.setChecked(list.get(position).isChecked());
-
-    }
-
-    @Override
-    public int getItemCount() {//获得数据项的大小
-        return list.size();
     }
 }
