@@ -71,7 +71,7 @@ public class NoteList extends AppCompatActivity {
                 }
             }
         });
-        
+
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(layoutManager);
         mRecyclerView.setAdapter(mMyAdapter);
