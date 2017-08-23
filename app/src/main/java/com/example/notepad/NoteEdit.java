@@ -19,13 +19,15 @@ import static com.example.notepad.R.id.save;
 
 
 public class NoteEdit extends AppCompatActivity {
-    private EditText text1;
-    private EditText text2;
-    private String editMode;//从上一个activity获得的参数，区分update和create
-    private String saveMode = "";//区分直接结束活动保存和点击保存按钮保存
-    private int updateId = -1;
-    private Note note;
-    private boolean isSaveDeafult = true;//save by default
+    private EditText mText1;
+    private EditText mText2;
+    private String mEditMode;//从上一个activity获得的参数，区分update和create
+    private String mSaveMode;//保存模式，区分为删除，保存，和直接退出活动的默认保存
+    private int mUpdateId = -1;
+    private Note mNote;//这个页面只存在一个note
+    private boolean mIsSaveDefault = true;//save by default
+    private static final String SAVEMODE_DELETE = "DELETE";
+    private static final String SAVEMODE_SAVE = "SAVE";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,78 +35,82 @@ public class NoteEdit extends AppCompatActivity {
         setContentView(R.layout.edit);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_edit);
         setSupportActionBar(toolbar);
-        text1 = (EditText) findViewById(R.id.edittext1);
-        text2 = (EditText) findViewById(R.id.edittext2);
+        mText1 = (EditText) findViewById(R.id.edittext1);
+        mText2 = (EditText) findViewById(R.id.edittext2);
+        init();
+    }
+
+    private void init() {
         Intent intent = getIntent();
-        editMode = intent.getStringExtra("mode");
-        if (editMode.equals("update")) {
-            updateId = intent.getIntExtra("id", 0);
-            note = DataSupport.find(Note.class, updateId);
-            text1.setText(note.getTitle());
-            text2.setText(note.getContent());
+        mEditMode = intent.getStringExtra("mode");
+        mSaveMode = "";
+        if (mEditMode.equals("update")) {//编辑模式为更新
+            try {//如果数据库出错，那么mUpdateId 可能为0，所以需要添加try-catch
+                mUpdateId = intent.getIntExtra("id", 0);
+                mNote = DataSupport.find(Note.class, mUpdateId);
+                mText1.setText(mNote.getTitle());
+                mText2.setText(mNote.getContent());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
     private void newNote() {
-        note = new Note();
-        String title = text1.getText().toString();
-        String content = text2.getText().toString();
-        if (title.equals("") && content.equals("")) {
-            isSaveDeafult = false;
-            finish();//when save nothing, finish it and don't give users a chance to input without saving button.
+        mNote = new Note();
+        String title = mText1.getText().toString();
+        String content = mText2.getText().toString();
+        if (title.equals("") && content.equals("")) {//nothing to save
             return;
         }
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
-        note.setTitle(text1.getText().toString());
-        note.setContent(text2.getText().toString());
-        note.setDate(df.format(new Date()));
-        note.save();
+        mNote.setTitle(mText1.getText().toString());
+        mNote.setContent(mText2.getText().toString());
+        mNote.setDate(df.format(new Date()));
+        mNote.save();
     }
 
     private void updateNote(int id) {
         ContentValues contentValues = new ContentValues();
-        contentValues.put("title", text1.getText().toString());
-        contentValues.put("content", text2.getText().toString());
+        contentValues.put("title", mText1.getText().toString());
+        contentValues.put("content", mText2.getText().toString());
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         contentValues.put("date", df.format(new Date()));
         DataSupport.update(Note.class, contentValues, id);
-        if (text1.getText().toString().equals("") && text2.getText().toString().equals("")) {
+        if (mText1.getText().toString().equals("") && mText2.getText().toString().equals("")) {
             DataSupport.delete(Note.class, id);//by the end, nothing in title and content.so delete it;
-            isSaveDeafult=false;
-            finish();
+            mIsSaveDefault = false;
+        }
+    }
+
+    private void deleteNote(int id) {
+        if (mUpdateId != -1) {
+            DataSupport.delete(Note.class, id);
         }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        switch (saveMode) {
-            case "delete":
-                //delete the note;
-                break;
-            case "save":
-                //use saving button to save;
-                break;
-            default:
-                switch (editMode) {
-                    case "new":
-                        newNote();
-                        if (isSaveDeafult) {
-                            Toast.makeText(NoteEdit.this, "Saved By default", Toast.LENGTH_SHORT).show();
-                        }
-                        break;
-                    case "update":
-                        updateNote(updateId);
-                        //It is not existing a condition that nothing is saved,but Toast.show("Saved By default"),
-                        //Because when nothing is be saved ,it will be finished.
-                        if(isSaveDeafult) {
-                            Toast.makeText(NoteEdit.this, "Saved By default", Toast.LENGTH_SHORT).show();
-                        }
-                        break;
-                    default:
-                        break;
-                }
-                break;
+        if (!mSaveMode.equals(SAVEMODE_DELETE)) {
+            if (mSaveMode.equals(SAVEMODE_SAVE)) {
+                mIsSaveDefault = false;
+            }
+            switch (mEditMode) {
+                case "new":
+                    newNote();
+                    break;
+                case "update":
+                    updateNote(mUpdateId);
+                    break;
+                default:
+                    break;
+            }
+            if (mIsSaveDefault) {
+                Toast.makeText(NoteEdit.this, "Saved By default", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            deleteNote(mUpdateId);
         }
     }
 
@@ -117,33 +123,15 @@ public class NoteEdit extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        //noinspection SimplifiableIfStatement
         if (id == save) {
-            switch (editMode) {
-                case "new":
-                    newNote();
-                    break;
-                case "update":
-                    updateNote(updateId);
-                    break;
-                default:
-                    break;
-            }
-            saveMode = "save";
+            mSaveMode = SAVEMODE_SAVE;
             finish();
             return true;
         }
         if (id == R.id.menuitem_delete) {
-            if (updateId != -1) {
-                //updateId
-                DataSupport.delete(Note.class, updateId);
-                //delete this updateId
-            }
-            //if newId,we know newId==-1 now
-            //nothing be created
-            //nothing we need to do
-            saveMode = "delete";//do nothing in onPause
+            mSaveMode = SAVEMODE_DELETE;
             finish();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
