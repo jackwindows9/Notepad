@@ -4,14 +4,11 @@
     tools:context="com.example.notepad.NoteList"
     android:title="Notepad"
     >
-    <item
-        android:id="@+id/disappear_delete_mode"
-        android:icon="@drawable/ic_close_white_24dp"
-        android:title=""
-        app:showAsAction="always" />
+
     <item
         android:id="@+id/select_all"
         android:title="All"
+        android:icon="@drawable/ic_select_all_white_18dp"
         app:showAsAction="always"/>
     <item
         android:id="@+id/delete_note"

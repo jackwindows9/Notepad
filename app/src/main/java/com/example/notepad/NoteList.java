@@ -35,7 +35,6 @@ public class NoteList extends AppCompatActivity {
     private RecyclerView mRecyclerView;
     private MyAdapter mMyAdapter;
     private MenuItem mDeleteNote;
-    private MenuItem mCancelDelete;
     private MenuItem mSelectAll;
     private static boolean mIsDeleteMode = false;
 
@@ -53,16 +52,25 @@ public class NoteList extends AppCompatActivity {
         mMyAdapter = new MyAdapter(mDataList);
         final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 
-        mToolbar.setNavigationIcon(R.drawable.ic_select_all_white_18dp);
+        mToolbar.setNavigationIcon(R.drawable.ic_event_note_white_3x);
+        mToolbar.getNavigationIcon().setVisible(true,false);
+        setSupportActionBar(mToolbar);
         mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                if(isDeleteMode()){
+                    mToolbar.setNavigationIcon(R.drawable.ic_event_note_white_3x);
+                    changeDeleteMode(false);
+                    for (int i = 0; i < mDataList.size(); i++) {
+                        mDataList.get(i).setIsChecked(false);
+                    }
+                    Log.d(TAG,"disappear_delete_mode");
+                    mMyAdapter.setList(mDataList);
+                    mRecyclerView.setAdapter(mMyAdapter);
+                    mMyAdapter.notifyDataSetChanged();
+                }
             }
         });
-        mToolbar.getNavigationIcon().setVisible(true,false);
-        setSupportActionBar(mToolbar);
-
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(layoutManager);
         mRecyclerView.setAdapter(mMyAdapter);
@@ -114,6 +122,7 @@ public class NoteList extends AppCompatActivity {
             public void onItemLongClick(View view, int position) {
                 //update the item on toolbar
                 changeDeleteMode(true);
+                mToolbar.setNavigationIcon(R.drawable.ic_close_white_24dp);
                 Note note=mDataList.get(position);
                 note.setIsChecked(true);
                 mMyAdapter.notifyDataSetChanged();
@@ -133,9 +142,11 @@ public class NoteList extends AppCompatActivity {
                     if (checkedNum == mDataList.size() && "All".equals(mSelectAll.getTitle())) {
                         //all checkbox is selected
                         mSelectAll.setTitle("No All");
+                        mSelectAll.setIcon(R.drawable.ic_check_box_white_24dp);
                     }
                     if (checkedNum < mDataList.size() && "No All".equals(mSelectAll.getTitle())) {
                         mSelectAll.setTitle("All");
+                        mSelectAll.setIcon(R.drawable.ic_select_all_white_18dp);
                     }
                 }
             }
@@ -158,10 +169,8 @@ public class NoteList extends AppCompatActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_note_list, menu);
 
-        mCancelDelete = menu.findItem(R.id.disappear_delete_mode);
         mDeleteNote = menu.findItem(R.id.delete_note);
         mSelectAll = menu.findItem(R.id.select_all);
-        mCancelDelete.setVisible(false);
         mDeleteNote.setVisible(false);
         mSelectAll.setVisible(false);
         return true;
@@ -198,18 +207,7 @@ public class NoteList extends AppCompatActivity {
             mMyAdapter.setList(mDataList);
             mRecyclerView.setAdapter(mMyAdapter);
             changeDeleteMode(false);
-            mMyAdapter.notifyDataSetChanged();
-            return true;
-        }
-
-        if (id == R.id.disappear_delete_mode) {
-            changeDeleteMode(false);
-            for (int i = 0; i < mDataList.size(); i++) {
-                mDataList.get(i).setIsChecked(false);
-            }
-            Log.d(TAG,"disappear_delete_mode");
-            mMyAdapter.setList(mDataList);
-            mRecyclerView.setAdapter(mMyAdapter);
+            mToolbar.setNavigationIcon(R.drawable.ic_event_note_white_3x);
             mMyAdapter.notifyDataSetChanged();
             return true;
         }
@@ -259,11 +257,12 @@ public class NoteList extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         Log.d(TAG,"onPause");
-        if(mCancelDelete!=null){
+        if(mSelectAll!=null){
             //如果在界面中未操作菜单，那么mCancelDelete就不会被初始化
             //所以在这里需要进行判断
             changeDeleteMode(false);
         }
+        mToolbar.setNavigationIcon(R.drawable.ic_event_note_white_3x);
     }
 
     @Override
@@ -276,7 +275,6 @@ public class NoteList extends AppCompatActivity {
 
     private void changeDeleteMode(boolean isDelete) {
         mIsDeleteMode=isDelete;
-        mCancelDelete.setVisible(isDelete);
         mDeleteNote.setVisible(isDelete);
         mSelectAll.setVisible(isDelete);
         if (isDelete) {
