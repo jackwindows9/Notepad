@@ -29,7 +29,7 @@ import static com.example.notepad.R.id.toolbar;
 
 
 public class NoteList extends AppCompatActivity {
-    private final static String TAG="NoteList";
+    private final static String TAG = "NoteList";
     private List<Note> mDataList;//数据列表
     private Toolbar mToolbar;
     private RecyclerView mRecyclerView;
@@ -53,18 +53,18 @@ public class NoteList extends AppCompatActivity {
         final FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 
         mToolbar.setNavigationIcon(R.drawable.ic_event_note_white_3x);
-        mToolbar.getNavigationIcon().setVisible(true,false);
+        mToolbar.getNavigationIcon().setVisible(true, false);
         setSupportActionBar(mToolbar);
         mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(isDeleteMode()){
+                if (isDeleteMode()) {
                     mToolbar.setNavigationIcon(R.drawable.ic_event_note_white_3x);
                     changeDeleteMode(false);
                     for (int i = 0; i < mDataList.size(); i++) {
                         mDataList.get(i).setIsChecked(false);
                     }
-                    Log.d(TAG,"disappear_delete_mode");
+                    Log.d(TAG, "disappear_delete_mode");
                     mMyAdapter.setList(mDataList);
                     mRecyclerView.setAdapter(mMyAdapter);
                     mMyAdapter.notifyDataSetChanged();
@@ -90,7 +90,7 @@ public class NoteList extends AppCompatActivity {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-                if (dy > 1||dy<-1) {//向上或者向下滑动
+                if (dy > 1 || dy < -1) {//向上或者向下滑动
                     fab.hide();
                 } else {
                     fab.show();
@@ -111,9 +111,9 @@ public class NoteList extends AppCompatActivity {
                     intent.putExtra("id", note.getId());//send note.id to edit interface
                     startActivityForResult(intent, 2);
                 } else {
-                    MyAdapter.ViewHolder viewHolder = new MyAdapter.ViewHolder(view);
-                    viewHolder.getCheckBox().setChecked(!note.isChecked());
                     note.setIsChecked(!note.isChecked());
+                    MyAdapter.ViewHolder viewHolder = new MyAdapter.ViewHolder(view);
+                    viewHolder.getCheckBox().setChecked(note.isChecked());
                 }
             }
         });
@@ -124,7 +124,7 @@ public class NoteList extends AppCompatActivity {
                 //update the item on toolbar
                 changeDeleteMode(true);
                 mToolbar.setNavigationIcon(R.drawable.ic_close_white_24dp);
-                Note note=mDataList.get(position);
+                Note note = mDataList.get(position);
                 note.setIsChecked(true);
                 mMyAdapter.notifyDataSetChanged();
             }
@@ -139,13 +139,15 @@ public class NoteList extends AppCompatActivity {
                         checkedNum++;
                     }
                 }
+                Log.d(TAG, checkedNum + "");
                 if (mSelectAll != null) {
                     if (checkedNum == mDataList.size() && "All".equals(mSelectAll.getTitle())) {
-                        //all checkbox is selected
+                        Log.d(TAG, "CLICK ALL");
                         mSelectAll.setTitle("No All");
                         mSelectAll.setIcon(R.drawable.ic_check_box_white_24dp);
                     }
                     if (checkedNum < mDataList.size() && "No All".equals(mSelectAll.getTitle())) {
+                        Log.d(TAG, "CLICK NO ALL");
                         mSelectAll.setTitle("All");
                         mSelectAll.setIcon(R.drawable.ic_select_all_white_18dp);
                     }
@@ -199,37 +201,30 @@ public class NoteList extends AppCompatActivity {
         }
 
         if (id == R.id.delete_note) {
+            int checkedNum = 0;//the number of checkbox which is selected
             for (int i = 0; i < mDataList.size(); i++) {
                 if (mDataList.get(i).isChecked()) {
-                    DataSupport.delete(Note.class, mDataList.get(i).getId());
+                    checkedNum++;
                 }
             }
-            refresh();
-            mMyAdapter.setList(mDataList);
-            mRecyclerView.setAdapter(mMyAdapter);
-            changeDeleteMode(false);
-            mToolbar.setNavigationIcon(R.drawable.ic_event_note_white_3x);
-            mMyAdapter.notifyDataSetChanged();
+            createAlertDialog(checkedNum);
             return true;
         }
 
         if (id == R.id.select_all) {
             if ("No All".equals(mSelectAll.getTitle())) {
-                Log.d(TAG,"select_all");
+                Log.d(TAG, "select_all");
                 for (int i = 0; i < mDataList.size(); i++) {
                     mDataList.get(i).setIsChecked(false);
-                    View view = mRecyclerView.getChildAt(i);
-                    if(view!=null) {
-                        MyAdapter.ViewHolder viewHolder = new MyAdapter.ViewHolder(view);
-                        viewHolder.getCheckBox().setChecked(false);
-                    }
+                    mToolbar.setNavigationIcon(R.drawable.ic_event_note_white_3x);
+                    changeDeleteMode(false);
                 }
             } else {
-                Log.d(TAG,"select_all");
+                Log.d(TAG, "select_all");
                 for (int i = 0; i < mDataList.size(); i++) {
                     mDataList.get(i).setIsChecked(true);
                     View view = mRecyclerView.getChildAt(i);
-                    if(view!=null) {
+                    if (view != null) {
                         MyAdapter.ViewHolder viewHolder = new MyAdapter.ViewHolder(view);
                         viewHolder.getCheckBox().setChecked(true);
                     }
@@ -257,13 +252,7 @@ public class NoteList extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        Log.d(TAG,"onPause");
-        if(mSelectAll!=null){
-            //如果在界面中未操作菜单，那么mCancelDelete就不会被初始化
-            //所以在这里需要进行判断
-            changeDeleteMode(false);
-        }
-        mToolbar.setNavigationIcon(R.drawable.ic_event_note_white_3x);
+        Log.d(TAG, "onPause");
     }
 
     @Override
@@ -275,7 +264,7 @@ public class NoteList extends AppCompatActivity {
     }
 
     private void changeDeleteMode(boolean isDelete) {
-        mIsDeleteMode=isDelete;
+        mIsDeleteMode = isDelete;
         mDeleteNote.setVisible(isDelete);
         mSelectAll.setVisible(isDelete);
         if (isDelete) {
@@ -283,6 +272,36 @@ public class NoteList extends AppCompatActivity {
         } else {
             mToolbar.setTitle("Notepad");
         }
+    }
+
+    protected void createAlertDialog(int number) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(NoteList.this);
+        builder.setTitle("Delete");
+        builder.setMessage("Are you sure you want to delete " + number + (number > 1 ? " items?" : " item?"));
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                for (int i = 0; i < mDataList.size(); i++) {
+                    if (mDataList.get(i).isChecked()) {
+                        DataSupport.delete(Note.class, mDataList.get(i).getId());
+                    }
+                }
+                refresh();
+                mMyAdapter.setList(mDataList);
+                mRecyclerView.setAdapter(mMyAdapter);
+                changeDeleteMode(false);
+                mToolbar.setNavigationIcon(R.drawable.ic_event_note_white_3x);
+                mMyAdapter.notifyDataSetChanged();
+                dialog.dismiss();
+            }
+        });
+        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        builder.create().show();
     }
 
     public static boolean isDeleteMode() {
